@@ -1,0 +1,9 @@
+name: Value_Box_Shiny_Stock
+account: jRStudio
+server: beta.rstudioconnect.com
+appId: 1117
+bundleId: 2755
+url: https://beta.rstudioconnect.com/jRStudio/Value_Box_Shiny_Stock/
+when: 1469814761.58654
+asMultiple: FALSE
+asStatic: FALSE

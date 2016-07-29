@@ -1,0 +1,30 @@
+---
+output: pdf_document
+params:
+     plotFunc: !r stop("required")
+     weight1: !r list()
+     date1: !r list()
+     date2: !r list()
+---
+
+
+## Test
+
+Note that the plotFunc and inputs are prefaced with !r, which indicates that the value is an R expression rather than a literal value.
+
+
+```{r, echo=FALSE}
+params$plotFunc()
+```
+
+This plot took reactive inputs from a FlexDashboard in which the user chose a percentage allocation to stocks of:
+```{r, echo=FALSE}
+params$weight1
+```
+
+And chose these dates
+```{r, echo=FALSE}
+params$date1
+
+params$date2
+```

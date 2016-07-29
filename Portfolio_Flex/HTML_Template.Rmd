@@ -1,0 +1,20 @@
+---
+output: html_document
+
+---
+
+
+## Growth of $1
+
+Note that the plotFunc and inputs are prefaced with !r, which indicates that the value is an R expression rather than a literal value.
+
+
+```{r, echo=FALSE}
+makePlot1()
+```
+
+This plot took reactive inputs from a FlexDashboard in which the user chose risk level:
+```{r, echo=FALSE}
+input$risktolerance
+```
+
