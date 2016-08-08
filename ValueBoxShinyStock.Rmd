@@ -1,17 +1,20 @@
 ---
 title: "Portfolios Example"
+resource_files:
+- Portfolio_Flex/stock_report.Rmd
+- Portfolio_Flex/HTML_Template.Rmd
+runtime: shiny
 output:
   flexdashboard::flex_dashboard:
-    orientation: rows
     source_code: embed
+    orientation: rows
     theme: spacelab
-runtime: shiny
 
 ---
 
 ```{r setup, include = FALSE}
-##library(webshot)
-##install_phantomjs()
+library(webshot)
+install_phantomjs()
 library(quantmod)
 library(dygraphs)
 library(DT)
@@ -20,7 +23,6 @@ library(formattable)
 library(quantmod)
 library(tseries)
 library(PerformanceAnalytics)
-
 
 ##returns monthly returns of an asset
 getMonthlyReturns  <- function(sym, start, end){
@@ -48,15 +50,17 @@ textInput("stock1", "Choose a stock", "AMZN")
 stock1 <- reactive({
   req(input$stock1)
   stock1 <- getSymbols(as.character(input$stock1), auto.assign = FALSE)
-  return(stock1)
   })
 
-helpText("Click here to download a PDF")
 
 downloadButton('download')
 
 makePlot <- function(){
   dygraph(Cl(stock1()))
+}
+
+makeTable<-function(){
+  datatable(as.data.frame(stock1()))
 }
 
 downloadHandler(
@@ -70,45 +74,18 @@ downloadHandler(
 
 ```
 
-Row {data-height=200}
------------------------------------------------------------------------
-### Highest Close {.value-box data-icon="fa-arrow-circle-o-up"}
-```{r, echo=FALSE}
-
-valueBoxOutput("valueBox1")
-
-output$valueBox1 <- renderValueBox({
-    valueBox(currency(max(Cl(stock1())), format = "d"))
-  })
-```
-
-### Lowest Close {.value-box data-icon="fa-arrow-circle-o-down"}
-
-```{r}
-
-valueBoxOutput("valueBox2")
-
-output$valueBox2 <-renderValueBox({
-  valueBox(currency(min(Cl(stock1())), format = "d"))
-})
-```
-
 Row {data-height=400, .tabset}
 -----------------------------------------------------------------------
 ### Closing Price
 ```{r, echo = FALSE}
-dygraphOutput("dygraph1")
-
-output$dygraph1 <- renderDygraph({
+renderDygraph({
   makePlot()
 })
 ```
 
 ### Volume
 ```{r, echo = FALSE}
-dygraphOutput("dygraph2")
-
-output$dygraph2 <- renderDygraph({
+renderDygraph({
 dygraph(Vo(stock1()))
 })
 ```
@@ -116,12 +93,11 @@ dygraph(Vo(stock1()))
 Row
 -----------------------------------------------------------------------
 ### Trading Detail
-```{r}
-dataTableOutput("mytable1")
 
-output$mytable1 = renderDataTable({
-    (as.data.frame(stock1()))
-    
+```{r}
+
+renderDataTable({
+    makeTable()
   })
 
 ```

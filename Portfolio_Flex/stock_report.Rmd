@@ -8,12 +8,17 @@ output:
 ## Stock Chart
 
 
+This time series and data table took reactive inputs from a FlexDashboard in which the user chose ticker symbol:
+
+```{r, echo=FALSE}
+input$stock1
+```
+
 ```{r, echo=FALSE}
 makePlot()
 ```
 
-This plot took reactive inputs from a FlexDashboard in which the user chose to plot ticker symbol:
 ```{r, echo=FALSE}
-input$stock1
+makeTable()
 ```
 
