@@ -1,23 +1,24 @@
 ---
 title: "Portfolios Example"
 resource_files:
-- Portfolio_Flex/stock_report.Rmd
-- Portfolio_Flex/HTML_Template.Rmd
+ - Portfolio_Flex/stock_report.Rmd
+ - Portfolio_Flex/HTML_Template.Rmd
 runtime: shiny
 output:
   flexdashboard::flex_dashboard:
-    source_code: embed
-    orientation: rows
-    theme: spacelab
+  source_code: embed
+orientation: rows
+theme: spacelab
 
 ---
-
+  
 ```{r setup, include = FALSE}
 library(webshot)
 install_phantomjs()
 library(quantmod)
 library(dygraphs)
 library(DT)
+library(data.table)
 library(flexdashboard)
 library(formattable)
 library(quantmod)
@@ -34,9 +35,7 @@ getMonthlyReturns  <- function(sym, start, end){
 }
 ```
 
-
 # Trading History {data-orientation=rows}
-
 
 Sidebar {.sidebar}
 -------------------------------------
@@ -49,32 +48,19 @@ textInput("stock1", "Choose a stock", "AMZN")
 
 stock1 <- reactive({
   req(input$stock1)
-  stock1 <- getSymbols(as.character(input$stock1), auto.assign = FALSE)
-  })
-
-
-downloadButton('download')
+  stock1 <- getSymbols(as.character(input$stock1), auto.assign = FALSE, from="2015-01-01")
+})
 
 makePlot <- function(){
   dygraph(Cl(stock1()))
 }
 
 makeTable<-function(){
-  datatable(as.data.frame(stock1()))
+  datatable(as.data.frame(stock1()), fillContainer = TRUE)
 }
-
-downloadHandler(
-    filename = function() { paste(input$stock1, Sys.Date(),'report.pdf', sep='_') },
-    content =  function(filename) {
-                    rmarkdown::render("Portfolio_Flex/stock_report.Rmd",
-                    rmarkdown::pdf_document(),
-                    filename
-                    )
-    })
-
 ```
 
-Row {data-height=400, .tabset}
+Row {data-height=400}
 -----------------------------------------------------------------------
 ### Closing Price
 ```{r, echo = FALSE}
@@ -83,31 +69,22 @@ renderDygraph({
 })
 ```
 
-### Volume
-```{r, echo = FALSE}
-renderDygraph({
-dygraph(Vo(stock1()))
-})
-```
 
-Row
+Row {data-height=400}
 -----------------------------------------------------------------------
 ### Trading Detail
-
 ```{r}
-
 renderDataTable({
-    makeTable()
-  })
-
+  makeTable()
+})
 ```
 
 Portfolio Allocation 
 ======================================
-
+  
 Sidebar {.sidebar}
 -------------------------------------
-
+  
 ```{r, echo = FALSE}
 dateRangeInput("daterange", "Date range:",
                start = "1994-01-01",
@@ -127,7 +104,7 @@ numericInput("allocation2", "Portfolio 2 Percentage Allocation to Stocks", 40,
 
 Row {data-height=600}
 -----------------------------------------------------------------------
-
+  
 ### Growth of $1 in Portfolio 1
 ```{r, echo= FALSE}
 #function to calculate growth of one dollar over time period
@@ -156,19 +133,19 @@ dygraphOutput("dygraphPortfolio1")
 
 output$dygraphPortfolio1 <- renderDygraph({
   dygraph(dollarGrowth1()) %>%
-  dyRangeSelector(height = 20) %>%
-  dyShading(from = "2001-03-01", to = "2001-11-01", color = "#FFE6E6") %>%
-  dyShading(from = "2007-12-01", to = "2009-06-01", color = "#FFE6E6") %>% 
-  dyEvent(x = "2008-09-15", label = "Lehman Fails", labelLoc =
-            "top", color = "red")
+    dyRangeSelector(height = 20) %>%
+    dyShading(from = "2001-03-01", to = "2001-11-01", color = "#FFE6E6") %>%
+    dyShading(from = "2007-12-01", to = "2009-06-01", color = "#FFE6E6") %>% 
+    dyEvent(x = "2008-09-15", label = "Lehman Fails", labelLoc =
+              "top", color = "red")
 })
 ```
 
 Row {data-height=600}
 -----------------------------------------------------------------------
-
+  
 ### Growth of $1 in Portfolio 2
-
+  
 ```{r}
 dollarGrowth2 <- reactive({
   req(input$allocation2)
@@ -194,21 +171,21 @@ dygraphOutput("dygraphPortfolio2")
 
 output$dygraphPortfolio2 <- renderDygraph({
   dygraph(dollarGrowth2()) %>%
-  dyRangeSelector(height = 20) %>%
-  dyShading(from = "2001-03-01", to = "2001-11-01", color = "#FFE6E6") %>%
-  dyShading(from = "2007-12-01", to = "2009-06-01", color = "#FFE6E6") %>%
-  dyEvent(x = "2008-09-15", label = "Lehman Fails", labelLoc =
-            "top", color = "red")
+    dyRangeSelector(height = 20) %>%
+    dyShading(from = "2001-03-01", to = "2001-11-01", color = "#FFE6E6") %>%
+    dyShading(from = "2007-12-01", to = "2009-06-01", color = "#FFE6E6") %>%
+    dyEvent(x = "2008-09-15", label = "Lehman Fails", labelLoc =
+              "top", color = "red")
 })
 ```
 
 
 Portfolios by Risk 
 ======================================
-
+  
 Sidebar {.sidebar}
 -------------------------------------
-
+  
 ```{r, echo = FALSE}
 dateRangeInput("daterange2", "Date range:",
                start = "1990-01-01",
@@ -240,36 +217,37 @@ dollarGrowth4 <- reactive({
   return(dollarGrowth4)
 })
 
-downloadButton("report1", "Report")
+downloadButton('download')
 
 makePlot1 <- function(){
   dygraph(dollarGrowth4()) %>%
-  dyRangeSelector(height = 20) %>%
-  dyShading(from = "2001-03-01", to = "2001-11-01", color = "#FFE6E6") %>%
-  dyShading(from = "2007-12-01", to = "2009-06-01", color = "#FFE6E6") %>%
-  dyEvent(x = "2008-09-15", label = "Lehman Fails", labelLoc =
-            "top", color = "red")%>%
-  dyEvent(x = "2016-06-23", label = "Brexit", labelLoc =
-            "top", color = "blue")
+    dyRangeSelector(height = 20) %>%
+    dyShading(from = "2001-03-01", to = "2001-11-01", color = "#FFE6E6") %>%
+    dyShading(from = "2007-12-01", to = "2009-06-01", color = "#FFE6E6") %>%
+    dyEvent(x = "2008-09-15", label = "Lehman Fails", labelLoc =
+              "top", color = "red")%>%
+    dyEvent(x = "2016-06-23", label = "Brexit", labelLoc =
+              "top", color = "blue")
 }
 
 downloadHandler(
-    filename = function() { paste(input$risktolerance, 'risk tolerance', Sys.Date(),'report.html',                           sep='_') },
-    content =  function(filename) {
-                    rmarkdown::render("Portfolio_Flex/HTML_Template.Rmd",
-                    rmarkdown::html_document(),
-                    filename
-                    )
-    })
+  filename = function() { paste(input$risktolerance, 'risk tolerance', Sys.Date(),'report.pdf',                           sep='_') },
+  content =  function(filename) {
+    rmarkdown::render("Portfolio_Flex/HTML_Template.Rmd",
+                      rmarkdown::pdf_document(),
+                      filename
+    )
+  })
 
 ```
 
 
+
 Row {data-height=600}
 -----------------------------------------------------------------------
-
+  
 ### Growth of $1
-
+  
 ```{r}
 dygraphOutput("dygraphPortfolio4")
 
