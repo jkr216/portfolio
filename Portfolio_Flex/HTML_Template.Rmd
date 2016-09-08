@@ -1,12 +1,12 @@
 ---
-output: html_document
-
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 
 ## Growth of $1
 
-Note that the plotFunc and inputs are prefaced with !r, which indicates that the value is an R expression rather than a literal value.
 
 
 ```{r, echo=FALSE}

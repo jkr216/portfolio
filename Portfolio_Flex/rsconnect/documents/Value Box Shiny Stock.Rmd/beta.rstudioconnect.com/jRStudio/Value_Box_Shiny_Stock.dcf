@@ -2,8 +2,9 @@ name: Value_Box_Shiny_Stock
 account: jRStudio
 server: beta.rstudioconnect.com
 appId: 1117
-bundleId: 2755
+bundleId: 2760
 url: https://beta.rstudioconnect.com/jRStudio/Value_Box_Shiny_Stock/
-when: 1469814761.58654
+when: 1469819160.49871
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: stock_report.Rmd|HTML_Template.Rmd

@@ -1,12 +1,9 @@
 ---
 output:
   pdf_document: default
-  html_document: default
 ---
 
-
 ## Stock Chart
-
 
 This time series and data table took reactive inputs from a FlexDashboard in which the user chose ticker symbol:
 
