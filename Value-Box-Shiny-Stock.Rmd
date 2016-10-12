@@ -1,0 +1,251 @@
+---
+title: 
+runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+    logo: RStudio-logo.png
+    orientation: rows
+    source_code: embed
+theme: spacelab
+
+---
+  
+```{r setup, include = FALSE}
+library(flexdashboard)
+library(quantmod)
+library(dygraphs)
+library(DT)
+library(data.table)
+library(formattable)
+library(tseries)
+library(PerformanceAnalytics)
+
+##returns monthly returns of an asset
+getMonthlyReturns  <- function(sym, start, end){
+  price <- get.hist.quote(instrument=sym, start=start,end=end, quote="AdjClose", provider="yahoo", 
+                          compression="m", retclass="zoo", quiet=TRUE)
+  index(price) <- as.yearmon(index(price))
+  all_returns <- diff(log(price))
+  return(all_returns)
+}
+```
+
+# Trading History {data-orientation=rows}
+
+Sidebar {.sidebar}
+-------------------------------------
+  
+```{r}
+
+textInput("stock1", "Choose a stock", "AMZN")
+
+stock1 <- reactive({
+  req(input$stock1)
+  stock1 <- getSymbols(as.character(input$stock1), auto.assign = FALSE, from="2015-01-01")
+})
+
+makePlot <- function(){
+  dygraph(Cl(stock1()))
+}
+
+makeTable<-function(){
+  datatable(as.data.frame(stock1()), fillContainer = TRUE)
+}
+
+
+```
+
+Row {data-height=400}
+-----------------------------------------------------------------------
+### Closing Price
+```{r, echo = FALSE}
+renderDygraph({
+  makePlot()
+})
+```
+
+
+Row {data-height=400}
+-----------------------------------------------------------------------
+### Trading Detail
+```{r}
+renderDataTable({
+  makeTable()
+})
+```
+
+Portfolio Allocation 
+======================================
+  
+Sidebar {.sidebar}
+-------------------------------------
+  
+```{r, echo = FALSE}
+dateRangeInput("daterange", "Date range:",
+               start = "1994-01-01",
+               end   = "2016-05-31",
+               separator = " - ")
+
+helpText("You can compare different portfolio performances by changing the percentage allocation to stocks in Portfolios 1 and 2 below")
+
+numericInput("allocation1", "Portfolio 1 Percentage Allocation to Stocks", 70,
+             min = 1, max = 100)
+
+numericInput("allocation2", "Portfolio 2 Percentage Allocation to Stocks", 40,
+             min = 1, max = 100)
+
+```
+
+
+Row {data-height=500}
+-----------------------------------------------------------------------
+  
+### Growth of $1 in Portfolio 1
+```{r, echo= FALSE}
+#function to calculate growth of one dollar over time period
+
+dollarGrowth1 <- reactive({
+  req(input$allocation1)
+  
+  start <- as.character(input$daterange[1])
+  end   <- as.character(input$daterange[2])
+  stock_allocation1 <- as.numeric(input$allocation1)/100
+  
+  price.sym1<-getMonthlyReturns("spy", start, end)
+  price.sym2<-getMonthlyReturns("vbmfx", start, end)
+  
+  bond_allocation1 <- 1-stock_allocation1
+  w1 = c(stock_allocation1, bond_allocation1)
+  
+  portfolio.prices <-as.xts(merge(price.sym1,price.sym2))
+  
+  dollarGrowth1 <- Return.portfolio(portfolio.prices, weights = w1, wealth.index = TRUE, verbose = FALSE)
+  
+  return(dollarGrowth1)
+})
+
+dygraphOutput("dygraphPortfolio1")
+
+output$dygraphPortfolio1 <- renderDygraph({
+  dygraph(dollarGrowth1()) %>%
+    dyRangeSelector(height = 20) %>%
+    dyShading(from = "2001-03-01", to = "2001-11-01", color = "#FFE6E6") %>%
+    dyShading(from = "2007-12-01", to = "2009-06-01", color = "#FFE6E6") %>% 
+    dyEvent(x = "2008-09-15", label = "Lehman Fails", labelLoc =
+              "top", color = "red")
+})
+```
+
+Row {data-height=500}
+-----------------------------------------------------------------------
+  
+### Growth of $1 in Portfolio 2
+  
+```{r}
+dollarGrowth2 <- reactive({
+  req(input$allocation2)
+  
+  start <- as.character(input$daterange[1])
+  end   <- as.character(input$daterange[2])
+  
+  price.sym1<-getMonthlyReturns("spy", start, end)
+  price.sym2<-getMonthlyReturns("vbmfx", start, end)
+  
+  stock_allocation2 <- as.numeric(input$allocation2)/100
+  bond_allocation2 <- 1-stock_allocation2
+  w2 = c(stock_allocation2, bond_allocation2)
+  
+  portfolio.prices <-as.xts(merge(price.sym1,price.sym2))
+  
+  dollarGrowth2 <- Return.portfolio(portfolio.prices, weights = w2, wealth.index = TRUE, verbose = FALSE)
+  
+  return(dollarGrowth2)
+})
+
+dygraphOutput("dygraphPortfolio2")
+
+output$dygraphPortfolio2 <- renderDygraph({
+  dygraph(dollarGrowth2()) %>%
+    dyRangeSelector(height = 20) %>%
+    dyShading(from = "2001-03-01", to = "2001-11-01", color = "#FFE6E6") %>%
+    dyShading(from = "2007-12-01", to = "2009-06-01", color = "#FFE6E6") %>%
+    dyEvent(x = "2008-09-15", label = "Lehman Fails", labelLoc =
+              "top", color = "red")
+})
+```
+
+
+Portfolios by Risk 
+======================================
+  
+Sidebar {.sidebar}
+-------------------------------------
+  
+```{r, echo = FALSE}
+dateRangeInput("daterange2", "Date range:",
+               start = "1990-01-01",
+               end   = "2016-03-31",
+               separator = " - ")
+
+helpText("Compare the portfolio at different risk levels.")
+
+numericInput("risktolerance", "Risk Level (1-10)", 2,
+             min = 1, max = 10)
+
+dollarGrowth4 <- reactive({
+  req(input$risktolerance)
+  
+  start <- as.character(input$daterange2[1])
+  end   <- as.character(input$daterange2[2])
+  
+  price.sym1<-getMonthlyReturns("spy", start, end)
+  price.sym2<-getMonthlyReturns("vbmfx", start, end)
+  
+  stock_allocation4 <- as.numeric(input$risktolerance)/10
+  bond_allocation4 <- 1-stock_allocation4
+  w4 = c(stock_allocation4, bond_allocation4)
+  
+  portfolio.prices <-as.xts(merge(price.sym1,price.sym2))
+  
+  dollarGrowth4 <- Return.portfolio(portfolio.prices, weights = w4, wealth.index = TRUE, verbose = FALSE)
+  
+  return(dollarGrowth4)
+})
+
+makePlot1 <- function(){
+  dygraph(dollarGrowth4()) %>%
+    dyRangeSelector(height = 20) %>%
+    dyShading(from = "2001-03-01", to = "2001-11-01", color = "#FFE6E6") %>%
+    dyShading(from = "2007-12-01", to = "2009-06-01", color = "#FFE6E6") %>%
+    dyEvent(x = "2008-09-15", label = "Lehman Fails", labelLoc =
+              "top", color = "red")%>%
+    dyEvent(x = "2016-06-23", label = "Brexit", labelLoc =
+              "top", color = "blue")
+}
+
+##downloadButton('download')
+
+##downloadHandler(
+  ##filename = function() {paste(input$risktolerance, 'risk tolerance', Sys.Date(),'report.html',                    ##       sep='_')},
+  ##content =  function(filename) {
+    ##rmarkdown::render("Portfolio_Flex/HTML_Template.Rmd",
+      ##                rmarkdown::html_document(),
+        ##              filename)
+  #})
+```
+
+Row {data-height=600}
+-----------------------------------------------------------------------
+  
+### Growth of $1
+  
+```{r}
+dygraphOutput("dygraphPortfolio4")
+
+output$dygraphPortfolio4 <- renderDygraph({
+  makePlot1()
+})
+```
+
+
+

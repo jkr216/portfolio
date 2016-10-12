@@ -15,7 +15,4 @@ input$stock1
 makePlot()
 ```
 
-```{r, echo=FALSE}
-makeTable()
-```
 

@@ -1,0 +1,77 @@
+---
+title: "Shiny PDF Example"
+resource_files:
+ - Portfolio_Flex/stock_report.Rmd
+runtime: shiny
+output:
+  flexdashboard::flex_dashboard:
+  source_code: embed
+orientation: rows
+---
+  
+```{r setup, include = FALSE}
+library(webshot)
+install_phantomjs()
+library(quantmod)
+library(dygraphs)
+library(DT)
+library(data.table)
+library(flexdashboard)
+```
+
+# Trading History {data-orientation=rows}
+
+Sidebar {.sidebar}
+-------------------------------------
+  
+```{r}
+
+helpText("Select a stock.")
+
+textInput("stock1", "Choose a stock", "AMZN")
+
+stock1 <- reactive({
+  req(input$stock1)
+  stock1 <- getSymbols(as.character(input$stock1), auto.assign = FALSE, from="2015-01-01")
+})
+
+makePlot <- function(){
+  dygraph(Cl(stock1()))
+}
+
+makeTable<-function(){
+  datatable(as.data.frame(stock1()), fillContainer = TRUE)
+}
+
+helpText("Download a PDF report of the chart displayed. This will also capture the stock you selected.")
+
+downloadButton('download')
+
+downloadHandler(
+  filename = function() { paste(input$stock1, Sys.Date(),'report.pdf', sep='_') },
+  content =  function(filename) {
+    rmarkdown::render("Portfolio_Flex/stock_report.Rmd",
+                      rmarkdown::pdf_document(),
+                      filename)
+  })
+
+```
+
+Row {data-height=400}
+-----------------------------------------------------------------------
+### Closing Price
+```{r, echo = FALSE}
+renderDygraph({
+  makePlot()
+})
+```
+
+Row {data-height=400}
+-----------------------------------------------------------------------
+### Trading Detail
+```{r}
+renderDataTable({
+  makeTable()
+})
+```
+

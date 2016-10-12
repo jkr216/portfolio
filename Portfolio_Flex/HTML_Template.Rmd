@@ -4,10 +4,7 @@ output:
   html_document: default
 ---
 
-
 ## Growth of $1
-
-
 
 ```{r, echo=FALSE}
 makePlot1()
