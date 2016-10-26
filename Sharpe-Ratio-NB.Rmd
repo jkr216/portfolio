@@ -1,8 +1,8 @@
 ---
 title: "Sharpe Ratio"
-output: html_notebook
+output:
+  html_notebook: default
 ---
-
 
 ```{r setup, message = FALSE}
 library(PerformanceAnalytics)
