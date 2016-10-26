@@ -10,8 +10,6 @@ orientation: rows
 ---
   
 ```{r setup, include = FALSE}
-library(webshot)
-install_phantomjs()
 library(quantmod)
 library(dygraphs)
 library(DT)

@@ -1,0 +1,81 @@
+---
+title: "Sharpe Ratio"
+output: html_notebook
+---
+
+
+```{r setup, message = FALSE}
+library(PerformanceAnalytics)
+library(quantmod)
+library(dygraphs)
+
+##a function to calculate monthly returns on a stock or etf
+monthlyReturns <- function(sym, start_year) {
+  symbol <- getSymbols(sym, src='yahoo', auto.assign = FALSE, warnings = FALSE) 
+  data <- periodReturn(symbol, period='monthly', subset=paste(start_year, "::", sep =""), type = 'log')
+  colnames(data) <- as.character(sym)
+  assign(sym, data, .GlobalEnv)
+}
+
+```
+
+The key knobs that we can turn when evaluating a portfolio's performance are the underlying assets, the time frame and the relative weights of those assets. 
+
+```{r, message=FALSE}
+##Choose the starting year
+year <- 2009
+
+##First, get the monthly returns on 3 stocks
+##Let's choose Google, Amazon and JP Morgan
+monthlyReturns('GOOG', year)
+monthlyReturns('JPM', year)
+monthlyReturns('AMZN', year)
+
+##once you have the monthly returns of 3 assets, determine their respective weights in the portfolio
+w <- c(.25, .25, .50)
+
+##combine the monthly returns into 1 xts object
+asset_returns <- merge.xts(GOOG, JPM, AMZN)
+
+##Before combine these into a portfolio, graph the individual returns and see if anything jumps out as 
+##unusual. Did we fail to account for a stock split, for example? It looks like something happened to Google in March of 2014, but that something didn't affect JP Morgan or Amazon.
+dygraph(asset_returns, main = "Google v JP Morgan v Amazon") %>%
+  dyOptions(colors = RColorBrewer::brewer.pal(3, "Set2")) 
+
+
+```
+
+After we have chosen our assets and our starting year, and taken a peak at their individual monthly returns, we can start to think about combining these assets into a portfolio. 
+
+```{r}
+
+##use the built in Performance Analytics function Return.portfolio
+##and calculate the monthly returns on the portfolio, given the weights chosen above
+portfolio_monthly_returns <- Return.portfolio(asset_returns, weights = w)
+dygraph(portfolio_monthly_returns, main = "Portfolio Monthly Return")
+
+##now include the wealth.index = TRUE argument and instead of returning monthly returns, 
+##we will return the growth of $1 invested in the portfolio
+dollar_growth <- Return.portfolio(asset_returns, weights = w, wealth.index = TRUE)
+dygraph(dollar_growth, main = "Growth of $1 Invested in Portfolio")
+
+```
+
+There are a few limitations to note. We have not made provision for dividends, stock splits and the like. If you run this code but substitute in NFLX for one of the three assets, you will be surprised to learn that you lost money whilst investing in a rocketship. That's because the stock split 7-for-1 in 2015, but we did not take account of such things here. 
+
+```{r}
+
+##1 use the Return.excess function from perf an
+  portolio_excess_returns <- Return.excess(portfolio_monthly_returns, Rf = .002)
+  sharpe_ratio_manual <- mean(portolio_excess_returns)/StdDev(portfolio_monthly_returns)
+  
+  
+##2 use the built in SharpeRatio function in performance analytics
+  sharpe_ratio <- SharpeRatio(portfolio_monthly_returns, Rf = .0015)
+  
+  sharpe_ratio
+```
+
+
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
