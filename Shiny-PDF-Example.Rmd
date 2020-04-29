@@ -30,7 +30,7 @@ textInput("stock1", "Choose a stock", "AMZN")
 
 stock1 <- reactive({
   req(input$stock1)
-  stock1 <- getSymbols(as.character(input$stock1), auto.assign = FALSE, from="2015-01-01")
+  stock1 <- getSymbols(as.character(input$stock1), src = 'google', auto.assign = FALSE, from="2015-01-01")
 })
 
 makePlot <- function(){
